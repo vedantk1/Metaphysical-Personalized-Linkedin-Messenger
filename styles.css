@@ -1,20 +1,21 @@
 body {
   font-family: Arial, sans-serif;
   background-color: #f0f2f5;
-  margin: 10px;
-  padding: 10px 0;
+  margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 400px; 
 }
 .container {
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
   padding: 20px;
-  width: 400px; 
-  max-width: 90%;
+  width: 90%; 
+  /* max-width: 400px; */
   text-align: center;
 }
 h1 {
@@ -40,7 +41,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px; 
-  margin-top: 10px; 
+  /* margin-top: 10px;  */
 }
 .input-group p {
   
@@ -49,17 +50,23 @@ h2 {
   color: #333;
   text-align: left;
 }
-.input-group input[type="text"], .input-group select{
+.input-group input[type="text"]{
   flex: 1;
-  padding: 5px;
+  margin: 5px;
+  padding: 5px ;
   border: 1px solid #ccc;
   border-radius: 5px;
-  height: 20px;
+  height: 14px;
   width: 40%;
 }
 .input-group select {
-  height: 30px; 
-  padding: 5px 10px; 
+  flex: 1;
+  margin-top: 5px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  /* height: 20px; */
+  width: 40%;
 }
 .input-group button {
   background-color: #4CAF50;
@@ -112,17 +119,22 @@ h2 {
 }
 #task-list-heading p, #task-list p{
   flex: 0.4;
+  margin: 5px;
 }
 #task-list-heading button, #task-list button{
   background-color: transparent;
   color: red;
   flex: 0.2;
+  margin: 5px;
+
 }
 #new-task input[type="text"]{
   flex: 0.4;
 }
 #new-task button{
   flex: 0.2;
+  margin: 5px;
+
 }
 #settingsButton, #backButton {
   background-color: #007bff;
@@ -146,6 +158,14 @@ h2 {
   /* max-width: 200px; */
   display: inline-block;
   vertical-align: middle;
+}
+
+#tooltip {
+  width: 15px;
+  /* flex: 0.1; */
+}
+#profile-heading, #api-heading, #system-prompt-heading, #saved-task-heading {
+  justify-content: space-between;
 }
 
 

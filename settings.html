@@ -9,53 +9,66 @@
     <h1>Settings</h1>
     
     <div class="input-group">
-    <h2>Profile Details</h2>
-      <div class="input-wrapper">
-        <input type="text" id="userProfile" placeholder="Enter your profile details" required>
-        <p class="or">OR</p>
-        <button id="loadUserProfile" type="button">Load your profile</button>      
-      </div>
+        <div id = "profile-heading" class="input-wrapper">
+            <!-- <div class="input-wrapper"> -->
+            <h2>Profile Details</h2>
+            <img src="icons/tooltip.png" alt="tooltip" id="tooltip"> 
+            <!-- </div> -->
+        </div>
+        <div id = "profile-details-input" class="input-wrapper">
+                <input type="text" id="userProfile" placeholder="Enter your profile details" required>
+                <p class="or">OR</p>
+                <button id="loadUserProfile" type="button">Load your profile</button>      
+        </div>
     </div>
     
     <div class="input-group">
-      <h2>API Key</h2>
-      <div class="input-wrapper">
-        <input type="text" id="openAiApiInput" placeholder="Enter OpenAI API" required>
-      </div>
+        <div id = "api-heading" class="input-wrapper">
+            <h2>API Key</h2>
+            <img src="icons/tooltip.png" alt="tooltip" id="tooltip"> 
+
+        </div>
+
+        <div id = "api-input" class="input-wrapper">
+            <input type="text" id="openAiApiInput" placeholder="Enter OpenAI API" required>
+        </div>
     </div>
 
     <div class="input-group">
-        <h2>System Prompt</h2>
-        <div class="input-wrapper">
+        <div id = "system-prompt-heading" class="input-wrapper">
+            <h2>System Prompt</h2>
+            <img src="icons/tooltip.png" alt="tooltip" id="tooltip"> 
+        </div>
+
+        <div cid = "system-prompt-input" class="input-wrapper">
           <input type="text" id="systemPrompt" placeholder="Enter system prompt" required>
         </div>
     </div>
+
     <div class="input-group">
-        <div id="saved-task-heading">
-            <div class="input-wrapper">  
-                <h2>Saved Tasks</h2>
-            </div>
+        <div id="saved-task-heading" class="input-wrapper">
+            <h2>Saved Tasks</h2>
+            <img src="icons/tooltip.png" alt="tooltip" id="tooltip"> 
         </div>
         
-        <div id="task-list-heading">
-            <div class="input-wrapper">
-                <p id="Task Name">Task Name</p>
-                <p id="Task Description">Task Description</p>
-                <button id="removeAllTasksButton" type="button">Remove all</button>
-            </div>
+        <div id="task-list-heading" class="input-wrapper">
+            <p id="Task Name">Task Name</p>
+            <p id="Task Description">Task Description</p>
+            <button id="removeAllTasksButton" type="button">Remove all</button>
         </div>
+
         <div id="task-list">
             <!-- <div class="input-wrapper">
                 // dynamic content
             </div>   -->
         </div>
-        <div id="new-task">
-            <div class="input-wrapper">
-                <input type="text" id="newTaskKey" placeholder="Enter task name">
-                <input type="text" id="newTaskValue" placeholder="Enter task description">
-                <button id="addTaskButton" type="button">Add Task</button>
-            </div>       
+
+        <div id="new-task" class="input-wrapper">
+            <input type="text" id="newTaskKey" placeholder="Enter task name">
+            <input type="text" id="newTaskValue" placeholder="Enter task description">
+            <button id="addTaskButton" type="button">Add Task</button>
         </div>
+
     </div>
 
     <div class="button-group">
