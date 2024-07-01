@@ -136,11 +136,14 @@ function renderTasks() {
         inputWrapper.className = 'input-wrapper';
 
         const taskName = document.createElement('p');
-        const taskDescription = document.createElement('p');
-        const removeButton = document.createElement('button');
-
         taskName.textContent = task.key;
+
+        const taskDescription = document.createElement('p');
         taskDescription.textContent = task.value;
+        taskDescription.title = task.value; // This line sets the full text as the tooltip
+        taskDescription.className = 'truncated';
+
+        const removeButton = document.createElement('button');
         removeButton.textContent = 'Remove';
         removeButton.addEventListener('click', () => {
             console.log('remove button clicked');
