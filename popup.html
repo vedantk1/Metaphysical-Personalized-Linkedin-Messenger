@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LinkedIn Helper</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1><a href="https://metaphysical.in">LinkedIn Helper by metaphysical.in</a></h1>
+    
+    
+    <div class="input-group">
+      <h2 id="choose-task">Choose Task:</h2>
+      <div class="input-wrapper">
+        <select id="taskDropdown">
+          <option value="default">Select Task</option>
+           <!-- Options will be added dynamically  -->
+        </select>
+      </div>
+    </div>
+    
+    
+    <div class="input-group">
+      <h2 id="choose-model">Choose Model:</h2>
+      <div class="input-wrapper">
+        <select id="modelDropdown">
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+          <option value="gpt-4o">gpt-4o</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="button-group">
+      <button id="mainButton" type="button">Generate Message</button>
+      <button id="settingsButton" type="button">Settings</button>
+    </div>
+    
+    <div class="output-group">
+      <textarea id="output" rows="10" cols="50" placeholder="Output will be displayed here..."></textarea>
+    </div>
+  </div>
+  <script type="module" src="dist/popup.bundle.js"></script>
+  <!-- <script src="popup.js"></script> -->
+</body>
+</html>

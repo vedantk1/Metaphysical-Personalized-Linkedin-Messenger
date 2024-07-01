@@ -1,0 +1,16 @@
+{
+  "presets": [
+    ["@babel/preset-env", {
+      "useBuiltIns": "entry",
+      "corejs": 3,
+      "exclude": ["es.promise.with-resolvers"]
+    }]
+  ],
+  "plugins": [
+    ["babel-plugin-polyfill-corejs3", {
+      "method": "usage-global",
+      "targets": "> 0.25%, not dead",
+      "exclude": ["es.promise.with-resolvers"]
+    }]
+  ]
+}
