@@ -128,6 +128,12 @@ h2 {
   margin: 5px;
 
 }
+#default-system-prompt-button{
+  background-color: transparent;
+  color: green;
+  flex: 0.2;
+  margin: 5px;
+}
 #new-task input[type="text"]{
   flex: 0.4;
 }
