@@ -11,7 +11,7 @@ function loadSavedSettings() {
     const savedProfile = localStorage.getItem('userProfile');
     const savedApiKey = localStorage.getItem('apiKey');
     const savedSystemPrompt = localStorage.getItem('systemPrompt');
-    const savedTasks = JSON.parse(localStorage.getItem('tasks') || []); 
+    const savedTasks = JSON.parse(localStorage.getItem('tasks')) || []; 
 
     if (savedProfile) {
         document.getElementById('userProfile').value = savedProfile;
