@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Linkedin Helper",
+    "name": "Personalized Linkein Messenger by Metaphysical",
     "version": "1.0",
-    "description": "A simple Chrome extension.",
+    "description": "Designed to assist users in crafting personalized LinkedIn messages. This tool leverages OpenAI's models to generate contextually relevant messages, making your LinkedIn outreach more effective and efficient.",
     "action": {
       "default_popup": "popup.html",
       "default_icon": {
