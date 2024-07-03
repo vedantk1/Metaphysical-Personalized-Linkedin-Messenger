@@ -23,6 +23,14 @@ A Chrome extension for creating personalized LinkedIn messages using AI models. 
    ```bash
    npm install
    ```
+4. **Build the Extension**
+
+    - While the repo includes /dist directory to make the extension ready-to-use, bundling will ensure you run the latest code, especially if the dependencies have been update. Run the following command:
+    ```
+    npx webpack --config webpack.config.js
+    ```
+    - If you make any changes to the extension, you need to bundle your changes using Webpack. 
+
 
    
 
