@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Personalized Linkein Messenger by Metaphysical",
+    "name": "Personalized Linkedin Messenger by Metaphysical",
     "version": "1.0",
-    "description": "Designed to assist users in crafting personalized LinkedIn messages. This tool leverages OpenAI's models to generate contextually relevant messages, making your LinkedIn outreach more effective and efficient.",
+    "description": "Personalize LinkedIn messages using AI to generate contextually relevant messages for efficiency.",
     "action": {
       "default_popup": "popup.html",
       "default_icon": {
@@ -18,14 +18,10 @@
       "storage",
       "activeTab",
       "scripting",
-      "downloads",
-      "downloads.open",
       "tabs"
     ],
     "host_permissions": [
-      "http://*/",
-      "https://*/",
-      "file://*/*"
+      "https://api.openai.com/"
     ]
 
 
