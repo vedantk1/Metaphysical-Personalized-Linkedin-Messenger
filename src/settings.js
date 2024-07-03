@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 
 var tasks = [];
+var userApiKey;
 const defaultSystemPrompt = `
 YOUR TASK is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles. (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.") 
 
@@ -37,6 +38,7 @@ YOUR TASK is to assist users in crafting short LinkedIn messages to people based
 document.addEventListener('DOMContentLoaded', () => {
     loadSavedSettings();
     loadButtons(); 
+    loadKeyFormatter()
     });
 
 function loadSavedSettings() {
@@ -51,6 +53,8 @@ function loadSavedSettings() {
 
     if (savedApiKey) {
         document.getElementById('openAiApiInput').value = savedApiKey;
+        formatKey()
+
     }
 
     if (savedSystemPrompt) {
@@ -80,7 +84,7 @@ function loadButtons() {
 
     document.getElementById('saveSettingsButton').addEventListener('click', () => {
         const profile = document.getElementById('userProfile').value;
-        const apiKey = document.getElementById('openAiApiInput').value;
+        const apiKey = userApiKey;
         const systemPrompt = document.getElementById('systemPrompt').value;
         // Save to localStorage
         localStorage.setItem('userProfile', profile);
@@ -109,6 +113,15 @@ function loadButtons() {
     });
     document.getElementById('default-system-prompt-button').addEventListener('click', () => {
         document.getElementById('systemPrompt').value = defaultSystemPrompt;
+    });
+}
+function loadKeyFormatter() {
+    const apiKeyInput = document.getElementById('openAiApiInput');
+    apiKeyInput.addEventListener('focus', () => {
+        unformatKey();
+    });
+    apiKeyInput.addEventListener('blur', () => {
+        formatKey();
     });
 }
 function parseUserProfile() {
@@ -191,4 +204,23 @@ function renderTasks() {
         inputWrapper.appendChild(removeButton);
         taskList.appendChild(inputWrapper);
     });
+}
+function formatKey(){
+
+    const enteredApiKey = document.getElementById('openAiApiInput').value;
+    if (enteredApiKey && enteredApiKey.length > 8) {
+        const firstFour = enteredApiKey.slice(0, 4);
+        const lastFour = enteredApiKey.slice(-4);
+        const formattedKey = `${firstFour}...${lastFour}`;
+        // localStorage.setItem('apiKey', enteredApiKey);
+        document.getElementById('openAiApiInput').value = formattedKey;
+    }
+    userApiKey = enteredApiKey;
+
+}
+function unformatKey(){
+    const enteredApiKey = userApiKey;
+    if (enteredApiKey) {
+        document.getElementById('openAiApiInput').value = enteredApiKey;
+    }
 }
