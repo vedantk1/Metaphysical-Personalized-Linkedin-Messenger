@@ -37,8 +37,8 @@ A Chrome extension for creating personalized LinkedIn messages using AI models. 
    - Open the extension from the Chrome toolbar.
    - Navigate to the \`Settings\` page.
    - Input your OpenAI API key.
-   - Customize the system prompt or choose default. It is recommended to use the default system prompt.
    - Enter your LinkedIn profile details or load them automatically. To load, first navigate to your Linkedin profile webpage in chrome. The extension parses the opened webpage to load your profile when the load button is clicked.
+   - Customize the system prompt or choose default. It is recommended to use the default system prompt.
    - Add and manage tasks with specific names and descriptions. The desription of the selected task is used for adapting to your usecase while generating outputs.
    - Click on 'Save'.
 
@@ -48,7 +48,7 @@ A Chrome extension for creating personalized LinkedIn messages using AI models. 
    - Open extension and click \`Generate Message\` to create a LinkedIn message to them.
    - View the generated message in the output text area after a few seconds.
 
-## Files
+## Structure
 
 - **manifest.json**: Extension metadata and permissions.
 - **popup.html**: HTML structure for the main page.

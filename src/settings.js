@@ -68,6 +68,10 @@ function loadSavedSettings() {
 function loadButtons() {
 
     document.getElementById('loadUserProfile').addEventListener('click', () => {
+        if (!userApiKey) {
+            alert('Please enter your OpenAI API key');
+            return;
+        }
         //parse the profile content
         chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
             chrome.scripting.executeScript({
@@ -146,7 +150,9 @@ async function cleanProfile(profileContent) {
     console.log('cleanProfile() function called. sending to openai');
     console.log("profileContent: " + profileContent);
     // Clean the profile content
-    const apiKey = localStorage.getItem('apiKey');
+    // const apiKey = localStorage.getItem('apiKey');
+    const apiKey = userApiKey;
+
     console.log("apiKey: " + apiKey);
     // const userProfile = localStorage.getItem('userProfile');
     const systemPrompt = "The user will provide the parsed html innerText of their entire linkedin profile webpage. The text will be full of duplications an irrelevant content. Your job is to filter through the useless content and summarize the important text.";
