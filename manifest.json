@@ -1,28 +1,19 @@
 {
-    "manifest_version": 3,
-    "name": "Personalized Linkedin Messenger by Metaphysical",
-    "version": "1.0",
-    "description": "Personalize LinkedIn messages using AI to generate contextually relevant messages for efficiency.",
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon16.png",
-        "128": "icons/icon16.png"
-      }
-    },
-    "background": {
-      "service_worker": "background.js"
-    },
-    "permissions": [
-      "storage",
-      "activeTab",
-      "scripting",
-      "tabs"
-    ],
-    "host_permissions": [
-      "https://api.openai.com/"
-    ]
-
-
+  "manifest_version": 3,
+  "name": "Personalized Linkedin Messenger by Metaphysical",
+  "version": "1.0",
+  "description": "Personalize LinkedIn messages using AI to generate contextually relevant messages for efficiency.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon16.png",
+      "128": "icons/icon16.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "scripting", "tabs"],
+  "host_permissions": ["https://api.openai.com/"]
 }
