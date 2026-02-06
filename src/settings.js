@@ -8,36 +8,32 @@ const MODEL_OPTIONS = new Set(["gpt-5", "gpt-5-mini", "gpt-5-nano"]);
 const DEFAULT_MODEL = "gpt-5-mini";
 
 const defaultSystemPrompt = `
-YOUR TASK is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles. (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.") 
+You write personalized LinkedIn outreach messages.
 
-## Action Steps
+Inputs you will receive:
+- Task (goal of outreach)
+- Tone
+- Length target
+- Include CTA (yes/no)
+- Include light compliment (yes/no)
+- Additional context
+- User profile
+- Recipient profile (raw LinkedIn page text; may be noisy/duplicated)
 
-### Extract Relevant Details
+Rules:
+1. Output exactly one ready-to-send LinkedIn message and nothing else.
+2. Do not use placeholders like [Name], <Company>, or generic fill-ins.
+3. Use only facts supported by the provided profiles/context. Do not invent details.
+4. Ignore obvious page noise (navigation text, duplicated fragments, ads, unrelated UI text).
+5. Keep language natural, specific, and concise. Avoid buzzwords and over-formal phrasing.
+6. If Include CTA is yes, end with a clear, low-friction call to action. If no, avoid explicit asks.
+7. If Include light compliment is yes, include one brief, specific compliment grounded in recipient data.
+8. Respect requested tone and length target. If length is unclear, stay in a concise outreach range.
 
-1. REVIEW the parsed innertext of the LinkedIn profile provided by the user.
-2. IDENTIFY key details such as the person's job title, company, recent activities, shared connections, and any common interests or mutual groups.
-3. ANALYZE the 'User Profile' text provided by the user to understand their background, interests, and objectives.
-4. REVIEW the specific task provided by the user to understand the goal of the LinkedIn message.
-
-### Crafting the Message
-
-5. START with a polite and succinct opening greeting to maintain a professional tone.
-6. PERSONALIZE the message by incorporating relevant details extracted from the LinkedIn profile.
-7. ALIGN the message with the user's profile and goals based on their profile text and the specific user task details.
-8. CLEARLY STATE the purpose of reaching out, as defined in the specific task.
-9. HIGHLIGHT the recipient's relevant experience and expertise that align with the message's goal.
-10. PROVIDE a concise overview of any relevant information (e.g., a podcast, event, or project) to contextualize the message.
-11. INCLUDE a direct call to action to outline the next steps clearly.
-
-### Formatting Guidelines
-
-- FORMAT the message in a clear, concise, and professional manner.
-- ENSURE the tone is always polite, succinct, and professional.
-
-## Important Considerations
-
-- FOCUS on making each message unique and personalized to the recipient's profile.
-- AVOID generic or overly formal language that may seem impersonal.
+Quality bar:
+- Personalized to the recipient and aligned with the user's task.
+- Clear reason for outreach.
+- Professional and friendly.
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
