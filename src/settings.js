@@ -1,7 +1,8 @@
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 
-var tasks = [];
-var userApiKey;
+let tasks = [];
+let userApiKey = "";
+
 const defaultSystemPrompt = `
 YOUR TASK is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles. (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.") 
 
@@ -35,198 +36,166 @@ YOUR TASK is to assist users in crafting short LinkedIn messages to people based
 - AVOID generic or overly formal language that may seem impersonal.
 `;
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadSavedSettings();
-    loadButtons(); 
-    loadKeyFormatter()
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  loadSavedSettings();
+  bindEvents();
+});
 
 function loadSavedSettings() {
-    const savedProfile = localStorage.getItem('userProfile');
-    const savedApiKey = localStorage.getItem('apiKey');
-    const savedSystemPrompt = localStorage.getItem('systemPrompt');
-    const savedTasks = JSON.parse(localStorage.getItem('tasks')) || []; 
+  const savedProfile = localStorage.getItem("userProfile");
+  const savedApiKey = localStorage.getItem("apiKey");
+  const savedSystemPrompt = localStorage.getItem("systemPrompt");
+  const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-    if (savedProfile) {
-        document.getElementById('userProfile').value = savedProfile;
-    }
+  if (savedProfile) {
+    document.getElementById("userProfile").value = savedProfile;
+  }
 
-    if (savedApiKey) {
-        document.getElementById('openAiApiInput').value = savedApiKey;
-        formatKey()
+  if (savedApiKey) {
+    document.getElementById("openAiApiInput").value = savedApiKey;
+    userApiKey = savedApiKey;
+  }
 
-    }
+  if (savedSystemPrompt) {
+    document.getElementById("systemPrompt").value = savedSystemPrompt;
+  }
 
-    if (savedSystemPrompt) {
-        document.getElementById('systemPrompt').value = savedSystemPrompt;
-    }
-
-    // Load tasks
-    tasks = savedTasks;
-    renderTasks();
+  tasks = savedTasks;
+  renderTasks();
 }
-function loadButtons() {
 
-    document.getElementById('loadUserProfile').addEventListener('click', () => {
-        if (!userApiKey) {
-            alert('Please enter your OpenAI API key');
-            return;
+function bindEvents() {
+  document.getElementById("openAiApiInput").addEventListener("input", (event) => {
+    userApiKey = event.target.value.trim();
+  });
+
+  document.getElementById("toggleApiVisibility").addEventListener("click", () => {
+    const input = document.getElementById("openAiApiInput");
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    document.getElementById("toggleApiVisibility").textContent = isPassword ? "Hide" : "Show";
+  });
+
+  document.getElementById("loadUserProfile").addEventListener("click", () => {
+    if (!userApiKey) {
+      alert("Please enter your OpenAI API key");
+      return;
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        func: () => {
+          const profileText = document.body ? document.body.innerText : "";
+          chrome.runtime.sendMessage({ action: "parsedUserProfile", profileContent: profileText });
         }
-        //parse the profile content
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            chrome.scripting.executeScript({
-              target: {tabId: tabs[0].id},
-              function: () => parseUserProfile()
-            });
-          });
-        // document.getElementById('userProfile').value = //parsed profile;
+      });
     });
+  });
 
-    document.getElementById('backButton').addEventListener('click', () => {
-        window.location.href = 'popup.html';
-    });
+  document.getElementById("backButton").addEventListener("click", () => {
+    window.location.href = "popup.html";
+  });
 
-    document.getElementById('saveSettingsButton').addEventListener('click', () => {
-        const profile = document.getElementById('userProfile').value;
-        const apiKey = userApiKey;
-        const systemPrompt = document.getElementById('systemPrompt').value;
-        // Save to localStorage
-        localStorage.setItem('userProfile', profile);
-        localStorage.setItem('apiKey', apiKey);
-        localStorage.setItem('systemPrompt', systemPrompt);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-  
-        alert('Settings saved!');
-    });
+  document.getElementById("saveSettingsButton").addEventListener("click", () => {
+    const profile = document.getElementById("userProfile").value.trim();
+    const systemPrompt = document.getElementById("systemPrompt").value.trim();
+    localStorage.setItem("userProfile", profile);
+    localStorage.setItem("apiKey", userApiKey);
+    localStorage.setItem("systemPrompt", systemPrompt);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 
-    document.getElementById('addTaskButton').addEventListener('click', () => {
-        const taskKey = document.getElementById('newTaskKey').value;
-        const taskValue = document.getElementById('newTaskValue').value;
-      
-        if (taskKey && taskValue) {
-            tasks.push({ key: taskKey, value: taskValue });
-            // renderTasks();
-          document.getElementById('newTaskKey').value = '';
-          document.getElementById('newTaskValue').value = '';
-          renderTasks();
-        }
-    });
-    document.getElementById('removeAllTasksButton').addEventListener('click', () => {
-        tasks = [];
-        renderTasks();
-    });
-    document.getElementById('default-system-prompt-button').addEventListener('click', () => {
-        document.getElementById('systemPrompt').value = defaultSystemPrompt;
-    });
-}
-function loadKeyFormatter() {
-    const apiKeyInput = document.getElementById('openAiApiInput');
-    apiKeyInput.addEventListener('focus', () => {
-        unformatKey();
-    });
-    apiKeyInput.addEventListener('blur', () => {
-        formatKey();
-    });
-}
-function parseUserProfile() {
-    console.log('parseUserProfile() function called');
-    const profile = document.body;
-    if (profile) {
-      const profileText = profile.innerText;
-      console.log('userProfileText:', profileText);
-      chrome.runtime.sendMessage({ action: "parsedUserProfile", profileContent: profileText });
-    } else {
-      console.log('profile not found');
-    }
-}
-chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === "parsedUserProfile") {
-      console.log('parsed user profile received: ' + message.profileContent);
-      cleanProfile( message.profileContent );
-    //   testFunction(message.profileContent);
+    alert("Settings saved!");
+  });
+
+  document.getElementById("addTaskButton").addEventListener("click", () => {
+    const taskKey = document.getElementById("newTaskKey").value.trim();
+    const taskValue = document.getElementById("newTaskValue").value.trim();
+
+    if (taskKey && taskValue) {
+      tasks.push({ key: taskKey, value: taskValue });
+      document.getElementById("newTaskKey").value = "";
+      document.getElementById("newTaskValue").value = "";
+      renderTasks();
     }
   });
+
+  document.getElementById("removeAllTasksButton").addEventListener("click", () => {
+    tasks = [];
+    renderTasks();
+  });
+
+  document.getElementById("default-system-prompt-button").addEventListener("click", () => {
+    document.getElementById("systemPrompt").value = defaultSystemPrompt;
+  });
+}
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === "parsedUserProfile") {
+    cleanProfile(message.profileContent);
+  }
+});
+
 async function cleanProfile(profileContent) {
-    console.log('cleanProfile() function called. sending to openai');
-    console.log("profileContent: " + profileContent);
-    // Clean the profile content
-    // const apiKey = localStorage.getItem('apiKey');
-    const apiKey = userApiKey;
+  const apiKey = userApiKey;
 
-    console.log("apiKey: " + apiKey);
-    // const userProfile = localStorage.getItem('userProfile');
-    const systemPrompt = "The user will provide the parsed html innerText of their entire linkedin profile webpage. The text will be full of duplications an irrelevant content. Your job is to filter through the useless content and summarize the important text.";
-    const userTask = profileContent;
-    console.log("userTask: " + userTask);
-    const openai = new OpenAI({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true
-    });
-    console.log("OpenAI created");
-    // console.log("model: " + document.getElementById('modelDropdown').value);
-    const completion = await openai.chat.completions.create({
-        messages: [{ 
-            role: "system", 
-            content: systemPrompt
-            }, { 
-            role: "user", 
-            content: userTask 
-        }],
-        model: localStorage.getItem('model')
-    });
-    console.log("completion created: " + completion);
-  
-    const cleanedProfile = completion.choices[0].message.content;
-    console.log("cleaned user profile: " + cleanedProfile);
-    document.getElementById('userProfile').value = cleanedProfile;
+  const systemPrompt =
+    "The user will provide the parsed html innerText of their entire linkedin profile webpage. The text will be full of duplications an irrelevant content. Your job is to filter through the useless content and summarize the important text.";
+  const openai = new OpenAI({
+    apiKey,
+    dangerouslyAllowBrowser: true
+  });
 
+  const completion = await openai.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: systemPrompt
+      },
+      {
+        role: "user",
+        content: profileContent
+      }
+    ],
+    model: localStorage.getItem("model") || "gpt-4o-mini"
+  });
+
+  const cleanedProfile = completion.choices[0]?.message?.content || "";
+  document.getElementById("userProfile").value = cleanedProfile;
 }
+
 function renderTasks() {
-    const taskList = document.getElementById('task-list');
-    taskList.innerHTML = '';
-    tasks.forEach((task, index) => {
+  const taskList = document.getElementById("task-list");
+  taskList.innerHTML = "";
 
-        const inputWrapper = document.createElement('div')
-        inputWrapper.className = 'input-wrapper';
+  if (tasks.length === 0) {
+    taskList.innerHTML = `<p class="empty-state">No tasks saved yet. Add one below.</p>`;
+    return;
+  }
 
-        const taskName = document.createElement('p');
-        taskName.textContent = task.key;
+  tasks.forEach((task, index) => {
+    const row = document.createElement("div");
+    row.className = "task-row";
 
-        const taskDescription = document.createElement('p');
-        taskDescription.textContent = task.value;
-        taskDescription.title = task.value; // This line sets the full text as the tooltip
-        taskDescription.className = 'truncated';
+    const taskName = document.createElement("p");
+    taskName.textContent = task.key;
 
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', () => {
-            console.log('remove button clicked');
-            tasks.splice(index, 1);
-            renderTasks();
-        });
+    const taskDescription = document.createElement("p");
+    taskDescription.textContent = task.value;
+    taskDescription.title = task.value;
+    taskDescription.className = "truncated";
 
-        inputWrapper.appendChild(taskName);
-        inputWrapper.appendChild(taskDescription);
-        inputWrapper.appendChild(removeButton);
-        taskList.appendChild(inputWrapper);
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => {
+      tasks.splice(index, 1);
+      renderTasks();
     });
-}
-function formatKey(){
 
-    const enteredApiKey = document.getElementById('openAiApiInput').value;
-    if (enteredApiKey && enteredApiKey.length > 8) {
-        const firstFour = enteredApiKey.slice(0, 4);
-        const lastFour = enteredApiKey.slice(-4);
-        const formattedKey = `${firstFour}...${lastFour}`;
-        // localStorage.setItem('apiKey', enteredApiKey);
-        document.getElementById('openAiApiInput').value = formattedKey;
-    }
-    userApiKey = enteredApiKey;
-
-}
-function unformatKey(){
-    const enteredApiKey = userApiKey;
-    if (enteredApiKey) {
-        document.getElementById('openAiApiInput').value = enteredApiKey;
-    }
+    row.appendChild(taskName);
+    row.appendChild(taskDescription);
+    row.appendChild(removeButton);
+    taskList.appendChild(row);
+  });
 }

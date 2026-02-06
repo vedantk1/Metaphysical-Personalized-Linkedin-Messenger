@@ -1,48 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Personalized Linkedin Messenger by Metaphysical.in</title>
+  <title>LinkedIn Message Studio</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
-<body>
+<body class="app popup">
   <div class="container">
-    <h1><a href="https://metaphysical.in">Personalized Linkedin Messenger by metaphysical.in</a></h1>
-    
-    
-    <div class="input-group">
-      <h2 id="choose-task">Choose Task:</h2>
-      <div class="input-wrapper">
-        <select id="taskDropdown">
-          <option value="default">Select Task</option>
-           <!-- Options will be added dynamically  -->
-        </select>
+    <header class="header">
+      <div class="brand">
+        <span class="brand-badge">AI</span>
+        <div>
+          <h1>LinkedIn Message Studio</h1>
+          <p class="subtitle">Personalized outreach crafted with your context.</p>
+        </div>
       </div>
-    </div>
-    
-    
-    <div class="input-group">
-      <h2 id="choose-model">Choose Model:</h2>
-      <div class="input-wrapper">
-        <select id="modelDropdown">
-          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-          <option value="gpt-4o">gpt-4o</option>
-          <option value="gpt-4o-mini">gpt-4o-mini</option>
-          
-        </select>
+      <button id="settingsButton" class="ghost-button" type="button">Settings</button>
+    </header>
+
+    <section class="panel">
+      <h2>Generation setup</h2>
+      <div class="grid two">
+        <label class="field">
+          <span>Task</span>
+          <select id="taskDropdown"></select>
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <select id="modelDropdown">
+            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="gpt-4o-mini">gpt-4o-mini</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Tone</span>
+          <select id="toneDropdown">
+            <option value="Professional">Professional</option>
+            <option value="Friendly">Friendly</option>
+            <option value="Direct">Direct</option>
+            <option value="Warm">Warm</option>
+            <option value="Enthusiastic">Enthusiastic</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Length</span>
+          <select id="lengthDropdown">
+            <option value="Short">Short</option>
+            <option value="Medium">Medium</option>
+            <option value="Long">Long</option>
+          </select>
+        </label>
       </div>
-    </div>
-    
-    <div class="button-group">
-      <button id="mainButton" type="button">Generate Message</button>
-      <button id="settingsButton" type="button">Settings</button>
-    </div>
-    
-    <div class="output-group">
-      <textarea id="output" rows="10" cols="50" placeholder="Output will be displayed here..."></textarea>
-    </div>
+
+      <div class="options">
+        <label class="checkbox">
+          <input type="checkbox" id="includeCta" checked>
+          Include a clear call-to-action
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="includeCompliment">
+          Add a light compliment
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Extra context (optional)</span>
+        <textarea id="additionalContext" rows="2" placeholder="Add notes like how you met, mutual interests, or a goal for this message."></textarea>
+      </label>
+
+      <div class="button-row">
+        <button id="mainButton" class="primary" type="button">Generate message</button>
+        <button id="clearButton" class="ghost-button" type="button">Clear</button>
+      </div>
+      <p id="statusMessage" class="status">Ready to generate.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Generated message</h2>
+      <textarea id="output" rows="8" placeholder="Your message will appear here..."></textarea>
+      <div class="button-row">
+        <button id="copyButton" class="secondary" type="button">Copy</button>
+        <button id="saveButton" class="secondary" type="button">Save to history</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Recent history</h2>
+        <button id="clearHistoryButton" class="ghost-button small" type="button">Clear history</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
   </div>
   <script type="module" src="dist/popup.bundle.js"></script>
-  <!-- <script type="module" src="src/popup.js"></script> -->
-  <!-- <script src="popup.js"></script> -->
 </body>
 </html>
