@@ -4,6 +4,8 @@ let tasks = [];
 let userApiKey = "";
 const THEME_STORAGE_KEY = "themePreference";
 const THEME_OPTIONS = new Set(["system", "light", "dark"]);
+const MODEL_OPTIONS = new Set(["gpt-5", "gpt-5-mini", "gpt-5-nano"]);
+const DEFAULT_MODEL = "gpt-5-mini";
 
 const defaultSystemPrompt = `
 YOUR TASK is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles. (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.") 
@@ -39,6 +41,7 @@ YOUR TASK is to assist users in crafting short LinkedIn messages to people based
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
+  ensureValidModelPreference();
   applyTheme(getSavedTheme());
   loadSavedSettings();
   bindEvents();
@@ -75,6 +78,15 @@ function loadSavedSettings() {
 function bindEvents() {
   document.getElementById("openAiApiInput").addEventListener("input", (event) => {
     userApiKey = event.target.value.trim();
+    localStorage.setItem("apiKey", userApiKey);
+  });
+
+  document.getElementById("userProfile").addEventListener("input", (event) => {
+    localStorage.setItem("userProfile", event.target.value.trim());
+  });
+
+  document.getElementById("systemPrompt").addEventListener("input", (event) => {
+    localStorage.setItem("systemPrompt", event.target.value.trim());
   });
 
   document.getElementById("toggleApiVisibility").addEventListener("click", () => {
@@ -106,17 +118,6 @@ function bindEvents() {
     window.location.href = "popup.html";
   });
 
-  document.getElementById("saveSettingsButton").addEventListener("click", () => {
-    const profile = document.getElementById("userProfile").value.trim();
-    const systemPrompt = document.getElementById("systemPrompt").value.trim();
-    localStorage.setItem("userProfile", profile);
-    localStorage.setItem("apiKey", userApiKey);
-    localStorage.setItem("systemPrompt", systemPrompt);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-
-    alert("Settings saved!");
-  });
-
   document.getElementById("addTaskButton").addEventListener("click", () => {
     const taskKey = document.getElementById("newTaskKey").value.trim();
     const taskValue = document.getElementById("newTaskValue").value.trim();
@@ -126,16 +127,19 @@ function bindEvents() {
       document.getElementById("newTaskKey").value = "";
       document.getElementById("newTaskValue").value = "";
       renderTasks();
+      persistTasks();
     }
   });
 
   document.getElementById("removeAllTasksButton").addEventListener("click", () => {
     tasks = [];
     renderTasks();
+    persistTasks();
   });
 
   document.getElementById("default-system-prompt-button").addEventListener("click", () => {
     document.getElementById("systemPrompt").value = defaultSystemPrompt;
+    localStorage.setItem("systemPrompt", defaultSystemPrompt.trim());
   });
 
   document.getElementById("themeSelect").addEventListener("change", (event) => {
@@ -172,11 +176,12 @@ async function cleanProfile(profileContent) {
         content: profileContent
       }
     ],
-    model: localStorage.getItem("model") || "gpt-4o-mini"
+    model: localStorage.getItem("model") || DEFAULT_MODEL
   });
 
   const cleanedProfile = completion.choices[0]?.message?.content || "";
   document.getElementById("userProfile").value = cleanedProfile;
+  localStorage.setItem("userProfile", cleanedProfile.trim());
 }
 
 function renderTasks() {
@@ -205,6 +210,7 @@ function renderTasks() {
     removeButton.addEventListener("click", () => {
       tasks.splice(index, 1);
       renderTasks();
+      persistTasks();
     });
 
     row.appendChild(taskName);
@@ -223,4 +229,15 @@ function applyTheme(theme) {
   const normalizedTheme = THEME_OPTIONS.has(theme) ? theme : "system";
   document.body.classList.remove("theme-system", "theme-light", "theme-dark");
   document.body.classList.add(`theme-${normalizedTheme}`);
+}
+
+function persistTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function ensureValidModelPreference() {
+  const model = localStorage.getItem("model");
+  if (!MODEL_OPTIONS.has(model)) {
+    localStorage.setItem("model", DEFAULT_MODEL);
+  }
 }

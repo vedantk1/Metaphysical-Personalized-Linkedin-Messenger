@@ -2,7 +2,7 @@
 import OpenAI from "openai";
 
 const DEFAULTS = {
-  model: "gpt-4o-mini",
+  model: "gpt-5-mini",
   tone: "Professional",
   length: "Short",
   includeCta: true,
@@ -10,6 +10,7 @@ const DEFAULTS = {
 };
 const THEME_STORAGE_KEY = "themePreference";
 const THEME_OPTIONS = new Set(["system", "light", "dark"]);
+const MODEL_OPTIONS = new Set(["gpt-5", "gpt-5-mini", "gpt-5-nano"]);
 
 const LENGTH_GUIDANCE = {
   Short: "1-3 concise sentences",
@@ -36,7 +37,9 @@ function bindEvents() {
   });
 
   document.getElementById("modelDropdown").addEventListener("change", (event) => {
-    localStorage.setItem("model", event.target.value);
+    const nextModel = MODEL_OPTIONS.has(event.target.value) ? event.target.value : DEFAULTS.model;
+    event.target.value = nextModel;
+    localStorage.setItem("model", nextModel);
   });
 
   document.getElementById("toneDropdown").addEventListener("change", (event) => {
@@ -121,7 +124,8 @@ function loadTasks() {
 }
 
 function hydratePreferences() {
-  const model = localStorage.getItem("model") || DEFAULTS.model;
+  const savedModel = localStorage.getItem("model");
+  const model = MODEL_OPTIONS.has(savedModel) ? savedModel : DEFAULTS.model;
   const tone = localStorage.getItem("tone") || DEFAULTS.tone;
   const length = localStorage.getItem("length") || DEFAULTS.length;
   const includeCta = localStorage.getItem("includeCta");
