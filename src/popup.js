@@ -1,173 +1,309 @@
 
 import OpenAI from "openai";
-console.log('event listener added to submit button!');
-// const systemPrompt = `
-// ## Task Description
 
-// - **YOUR TASK** is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles.
+const DEFAULTS = {
+  model: "gpt-4o-mini",
+  tone: "Professional",
+  length: "Short",
+  includeCta: true,
+  includeCompliment: false
+};
 
-// (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.")
+const LENGTH_GUIDANCE = {
+  Short: "1-3 concise sentences",
+  Medium: "4-6 sentences with a bit more detail",
+  Long: "7-9 sentences with a strong narrative"
+};
 
-// ## Action Steps
+document.addEventListener("DOMContentLoaded", () => {
+  loadTasks();
+  hydratePreferences();
+  renderHistory();
+  bindEvents();
+  setStatus("Ready to generate.");
+});
 
-// ### Extract Relevant Details
-
-// 1. **REVIEW** the parsed innertext of the LinkedIn profile provided by the user.
-// 2. **IDENTIFY** key details such as the person's job title, company, recent activities, shared connections, and any common interests or mutual groups.
-// 3. **ANALYZE** the 'User Profile' text provided by the user to understand their background, interests, and objectives.
-// 4. **REVIEW** the specific task provided by the user to understand the goal of the LinkedIn message.
-
-// ### Crafting the Message
-
-// 5. **START** with a polite and succinct opening greeting to maintain a professional tone.
-// 6. **PERSONALIZE** the message by incorporating relevant details extracted from the LinkedIn profile.
-// 7. **ALIGN** the message with the user's profile and goals based on their profile text and the specific user task details.
-// 8. **CLEARLY STATE** the purpose of reaching out, as defined in the specific task.
-// 9. **HIGHLIGHT** the recipient's relevant experience and expertise that align with the message's goal.
-// 10. **PROVIDE** a concise overview of any relevant information (e.g., a podcast, event, or project) to contextualize the message.
-// 11. **INCLUDE** a direct call to action to outline the next steps clearly.
-
-// ### Formatting Guidelines
-
-// - **FORMAT** the message in a clear, concise, and professional manner.
-// - **ENSURE** the tone is always polite, succinct, and professional.
-
-// ## Important Considerations
-
-// - **FOCUS** on making each message unique and personalized to the recipient's profile.
-// - **AVOID** generic or overly formal language that may seem impersonal.
-
-// `;
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded');
-  // load tasks from local storage
-  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-  tasks.forEach((task, index) => {
-    const option = document.createElement('option');
-    option.value = tasks[index].key;
-    option.text = tasks[index].key;
-    document.getElementById('taskDropdown').appendChild(option);
+function bindEvents() {
+  document.getElementById("settingsButton").addEventListener("click", () => {
+    window.location.href = "settings.html";
   });
-  // load last saved model. if not found, set to default and save
-  const model = localStorage.getItem('model');
-  if (model) {
-    document.getElementById('modelDropdown').value = model;
-  } else {
-    localStorage.setItem('model', 'gpt-3.5-turbo');
-    document.getElementById('modelDropdown').value = localStorage.getItem('model');
 
+  document.getElementById("mainButton").addEventListener("click", () => {
+    startGeneration();
+  });
+
+  document.getElementById("modelDropdown").addEventListener("change", (event) => {
+    localStorage.setItem("model", event.target.value);
+  });
+
+  document.getElementById("toneDropdown").addEventListener("change", (event) => {
+    localStorage.setItem("tone", event.target.value);
+  });
+
+  document.getElementById("lengthDropdown").addEventListener("change", (event) => {
+    localStorage.setItem("length", event.target.value);
+  });
+
+  document.getElementById("includeCta").addEventListener("change", (event) => {
+    localStorage.setItem("includeCta", String(event.target.checked));
+  });
+
+  document.getElementById("includeCompliment").addEventListener("change", (event) => {
+    localStorage.setItem("includeCompliment", String(event.target.checked));
+  });
+
+  document.getElementById("copyButton").addEventListener("click", async () => {
+    const output = document.getElementById("output").value.trim();
+    if (!output) {
+      setStatus("Nothing to copy yet.");
+      return;
+    }
+    await navigator.clipboard.writeText(output);
+    setStatus("Message copied to clipboard.");
+  });
+
+  document.getElementById("clearButton").addEventListener("click", () => {
+    document.getElementById("output").value = "";
+    document.getElementById("additionalContext").value = "";
+    setStatus("Cleared output and notes.");
+  });
+
+  document.getElementById("saveButton").addEventListener("click", () => {
+    const output = document.getElementById("output").value.trim();
+    if (!output) {
+      setStatus("Generate a message before saving.");
+      return;
+    }
+    saveToHistory(output);
+    renderHistory();
+    setStatus("Saved to history.");
+  });
+
+  document.getElementById("clearHistoryButton").addEventListener("click", () => {
+    localStorage.setItem("messageHistory", JSON.stringify([]));
+    renderHistory();
+    setStatus("History cleared.");
+  });
+
+  document.getElementById("historyList").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-history-index]");
+    if (!button) {
+      return;
+    }
+    const index = Number(button.dataset.historyIndex);
+    const history = getHistory();
+    if (!history[index]) {
+      return;
+    }
+    await navigator.clipboard.writeText(history[index].message);
+    setStatus("History message copied.");
+  });
+}
+
+function loadTasks() {
+  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  const taskDropdown = document.getElementById("taskDropdown");
+  taskDropdown.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "default";
+  placeholder.text = "Select task";
+  taskDropdown.appendChild(placeholder);
+
+  tasks.forEach((task) => {
+    const option = document.createElement("option");
+    option.value = task.key;
+    option.text = task.key;
+    taskDropdown.appendChild(option);
+  });
+}
+
+function hydratePreferences() {
+  const model = localStorage.getItem("model") || DEFAULTS.model;
+  const tone = localStorage.getItem("tone") || DEFAULTS.tone;
+  const length = localStorage.getItem("length") || DEFAULTS.length;
+  const includeCta = localStorage.getItem("includeCta");
+  const includeCompliment = localStorage.getItem("includeCompliment");
+
+  localStorage.setItem("model", model);
+  localStorage.setItem("tone", tone);
+  localStorage.setItem("length", length);
+  if (includeCta === null) {
+    localStorage.setItem("includeCta", String(DEFAULTS.includeCta));
   }
-  // document.getElementById('taskDropdown')
-});
+  if (includeCompliment === null) {
+    localStorage.setItem("includeCompliment", String(DEFAULTS.includeCompliment));
+  }
 
-document.getElementById('settingsButton').addEventListener('click', () => {
-  console.log('settings button clicked!');
-  window.location.href = 'settings.html';
-});
+  document.getElementById("modelDropdown").value = model;
+  document.getElementById("toneDropdown").value = tone;
+  document.getElementById("lengthDropdown").value = length;
+  document.getElementById("includeCta").checked = localStorage.getItem("includeCta") === "true";
+  document.getElementById("includeCompliment").checked =
+    localStorage.getItem("includeCompliment") === "true";
+}
 
-document.getElementById('mainButton').addEventListener('click', () => {
-  console.log('main button clicked!');
-  
-  const apiKey = localStorage.getItem('apiKey');
-  const profile = localStorage.getItem('userProfile');
-  const systemPrompt = localStorage.getItem('systemPrompt');
-  const userTask = document.getElementById('taskDropdown').value;
+function setStatus(message) {
+  const status = document.getElementById("statusMessage");
+  status.textContent = message;
+}
 
-  // console.log('apiKey:', apiKey);
-  // console.log('profile:', profile);
-  // console.log('systemPrompt:', systemPrompt);
-  // console.log('userTask:', userTask);
+function setLoading(isLoading) {
+  document.getElementById("mainButton").disabled = isLoading;
+  document.getElementById("copyButton").disabled = isLoading;
+  document.getElementById("saveButton").disabled = isLoading;
+  document.getElementById("clearButton").disabled = isLoading;
+}
 
-  if (apiKey && profile && userTask !== 'default' && systemPrompt) {
-    console.log('found stored apiKey, profile and systemPrompt. UserTask selected!');
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.scripting.executeScript({
-        target: {tabId: tabs[0].id},
-        function: () => parseProfile()
-      });
+function startGeneration() {
+  const apiKey = localStorage.getItem("apiKey");
+  const profile = localStorage.getItem("userProfile");
+  const systemPrompt = localStorage.getItem("systemPrompt");
+  const userTask = document.getElementById("taskDropdown").value;
+
+  if (!apiKey || !profile || !systemPrompt || userTask === "default") {
+    setStatus("Missing settings. Add your API key, profile, prompt, and task in Settings.");
+    alert("Please enter your API key, profile, system prompt, and task in Settings.");
+    return;
+  }
+
+  setStatus("Reading LinkedIn profile from the active tab...");
+  setLoading(true);
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const activeTab = tabs[0];
+    chrome.scripting.executeScript({
+      target: { tabId: activeTab.id },
+      func: () => {
+        const profileText = document.body ? document.body.innerText : "";
+        chrome.runtime.sendMessage({ action: "createResponse", profileContent: profileText });
+      }
     });
-  } else {
-    console.log('missing apiKey, profile, userTask, or systemPrompt');
-    alert('Please enter your API key, user profile, system prompt, and user task in the settings page before proceeding.');
-  }
-});
-
-document.getElementById('modelDropdown').addEventListener('change', () => {
-  const model = document.getElementById('modelDropdown').value;
-  console.log('model changed: ' + model);
-  localStorage.setItem('model', model);
-});
-
-function parseProfile() {
-  console.log('parseProfile function called');
-  const profile = document.body;
-  if (profile) {
-    const profileText = profile.innerText;
-    console.log('profileText:', profileText);
-    chrome.runtime.sendMessage({ action: "createResponse", profileContent: profileText });
-  } else {
-    console.log('profile not found');
-  }
+  });
 }
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === "createResponse") {
-    console.log('message received to send to OpenAI');
-    createResponse( message.profileContent );
-    // testFunction(message.profileContent);
+    createResponse(message.profileContent);
   }
 });
 
-async function testFunction(profileContent) {
-  console.log('testFunction called');
-
-  const apiKey = localStorage.getItem('apiKey');
-  const userProfile = localStorage.getItem('userProfile');
-  const systemPrompt = localStorage.getItem('systemPrompt');
-
-  let tasks = JSON.parse(localStorage.getItem('tasks') || []);
-  console.log('tasks:', tasks);
-  const userTask = tasks.find(task => task.key === document.getElementById('taskDropdown'). value).value;
-  // const userTask = tasks.[document.getElementById('taskDropdown'). value];
-
-  console.log('key:', apiKey);
-  console.log('systemPrompt:', systemPrompt);
-  console.log('userTask:', userTask);
-  console.log('userProfile:', userProfile);
-  console.log('profileContent:', profileContent);
-}
-
 async function createResponse(profileContent) {
+  const apiKey = localStorage.getItem("apiKey");
+  const userProfile = localStorage.getItem("userProfile");
+  const systemPrompt = localStorage.getItem("systemPrompt");
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  const taskKey = document.getElementById("taskDropdown").value;
+  const selectedTask = tasks.find((task) => task.key === taskKey);
+  const userTask = selectedTask ? selectedTask.value : taskKey;
 
-  console.log('sending to openai');
-
-  const apiKey = localStorage.getItem('apiKey');
-
-  const userProfile = localStorage.getItem('userProfile');
-
-  const systemPrompt = localStorage.getItem('systemPrompt');
-
-  let tasks = JSON.parse(localStorage.getItem('tasks') || []);
-  console.log('tasks:', tasks);
-  const userTask = tasks.find(task => task.key === document.getElementById('taskDropdown'). value).value;
-
+  const tone = document.getElementById("toneDropdown").value;
+  const length = document.getElementById("lengthDropdown").value;
+  const includeCta = document.getElementById("includeCta").checked;
+  const includeCompliment = document.getElementById("includeCompliment").checked;
+  const additionalContext = document.getElementById("additionalContext").value.trim();
 
   const openai = new OpenAI({
-      apiKey: apiKey,
-      dangerouslyAllowBrowser: true
+    apiKey,
+    dangerouslyAllowBrowser: true
   });
 
-  const completion = await openai.chat.completions.create({
-    messages: [{ 
-      role: "system", 
-      content: systemPrompt
-    }, { 
-      role: "user", 
-      content: "UserTask: " + userTask + " UserProfile: " + userProfile + " ReceipientsProfile " + profileContent
-    }],
-    model: localStorage.getItem('model')
+  const userMessage = `
+Task: ${userTask}
+Tone: ${tone}
+Length: ${length} (${LENGTH_GUIDANCE[length]})
+Include CTA: ${includeCta ? "Yes" : "No"}
+Include light compliment: ${includeCompliment ? "Yes" : "No"}
+Additional context: ${additionalContext || "None"}
+
+User profile:
+${userProfile}
+
+Recipient profile:
+${profileContent}
+
+Write the message only. Avoid placeholders.`;
+
+  setStatus("Generating message...");
+
+  try {
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userMessage
+        }
+      ],
+      model: localStorage.getItem("model")
+    });
+
+    const message = completion.choices[0]?.message?.content || "";
+    document.getElementById("output").value = message;
+    setStatus("Message generated. Review or save to history.");
+  } catch (error) {
+    console.error("OpenAI error:", error);
+    setStatus("Something went wrong generating the message. Check your key and try again.");
+  } finally {
+    setLoading(false);
+  }
+}
+
+function saveToHistory(message) {
+  const history = getHistory();
+  const entry = {
+    message,
+    task: document.getElementById("taskDropdown").value,
+    tone: document.getElementById("toneDropdown").value,
+    length: document.getElementById("lengthDropdown").value,
+    model: document.getElementById("modelDropdown").value,
+    createdAt: new Date().toISOString()
+  };
+  history.unshift(entry);
+  localStorage.setItem("messageHistory", JSON.stringify(history.slice(0, 5)));
+}
+
+function getHistory() {
+  return JSON.parse(localStorage.getItem("messageHistory") || "[]");
+}
+
+function renderHistory() {
+  const history = getHistory();
+  const container = document.getElementById("historyList");
+  container.innerHTML = "";
+
+  if (history.length === 0) {
+    container.innerHTML = `<p class="empty-state">No history yet. Save a message to see it here.</p>`;
+    return;
+  }
+
+  history.forEach((item, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "history-card";
+
+    const meta = document.createElement("div");
+    meta.className = "history-meta";
+    meta.textContent = `${item.task} • ${item.tone} • ${item.length}`;
+
+    const message = document.createElement("p");
+    message.className = "history-message";
+    message.textContent = item.message;
+
+    const actions = document.createElement("div");
+    actions.className = "history-actions";
+
+    const copyButton = document.createElement("button");
+    copyButton.className = "ghost-button small";
+    copyButton.textContent = "Copy";
+    copyButton.dataset.historyIndex = String(index);
+
+    actions.appendChild(copyButton);
+
+    wrapper.appendChild(meta);
+    wrapper.appendChild(message);
+    wrapper.appendChild(actions);
+    container.appendChild(wrapper);
   });
-  
-  console.log("generated message: " + completion.choices[0]);
-  document.getElementById('output').value = completion.choices[0].message.content;
 }

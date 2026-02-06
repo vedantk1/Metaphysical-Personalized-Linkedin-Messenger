@@ -1,88 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LinkedIn Messenger Settings</title>
+  <title>LinkedIn Message Studio Settings</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
-<body>
+<body class="app settings">
   <div class="container">
-    <h1>Settings</h1>
-    
-    <div class="input-group">
-        <div id = "api-heading" class="input-wrapper">
-            <h2>API Key</h2>
-            <img src="icons/tooltip.png" alt="tooltip" id="tooltip" title="Enter you OpenAI API KEY. You can create and find your keys in your OpenAI account"> 
-
+    <header class="header">
+      <div class="brand">
+        <span class="brand-badge">AI</span>
+        <div>
+          <h1>Studio Settings</h1>
+          <p class="subtitle">Configure your profile, prompt, and tasks.</p>
         </div>
+      </div>
+      <button id="backButton" class="ghost-button" type="button">Back</button>
+    </header>
 
-        <div id = "api-input" class="input-wrapper">
-            <input type="text" id="openAiApiInput" placeholder="Enter OpenAI API" required>
-        </div>
+    <section class="panel">
+      <h2>OpenAI API key</h2>
+      <p class="helper-text">Your key stays in local storage and is never shared outside the extension.</p>
+      <div class="field horizontal">
+        <input type="password" id="openAiApiInput" placeholder="sk-..." required>
+        <button id="toggleApiVisibility" class="ghost-button" type="button">Show</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Your LinkedIn profile</h2>
+      <p class="helper-text">Paste a short summary or load it from the open LinkedIn tab.</p>
+      <div class="field">
+        <textarea id="userProfile" rows="4" placeholder="Share your headline, key roles, and focus areas."></textarea>
+      </div>
+      <button id="loadUserProfile" class="secondary" type="button">Load from active tab</button>
+    </section>
+
+    <section class="panel">
+      <h2>System prompt</h2>
+      <p class="helper-text">Keep this default for best results, or customize for advanced workflows.</p>
+      <div class="field">
+        <textarea id="systemPrompt" rows="6" placeholder="Enter system prompt"></textarea>
+      </div>
+      <button id="default-system-prompt-button" class="ghost-button" type="button">Restore default</button>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Saved tasks</h2>
+        <button id="removeAllTasksButton" class="ghost-button small" type="button">Remove all</button>
+      </div>
+      <div class="task-header">
+        <p>Task name</p>
+        <p>Task description</p>
+        <span></span>
+      </div>
+      <div id="task-list" class="task-list"></div>
+      <div class="field grid two">
+        <input type="text" id="newTaskKey" placeholder="Enter task name">
+        <input type="text" id="newTaskValue" placeholder="Enter task description">
+      </div>
+      <button id="addTaskButton" class="secondary" type="button">Add task</button>
+    </section>
+
+    <div class="button-row">
+      <button id="saveSettingsButton" class="primary" type="button">Save settings</button>
     </div>
-    
-    <div class="input-group">
-        <div id = "profile-heading" class="input-wrapper">
-            <!-- <div class="input-wrapper"> -->
-            <h2>Profile Details</h2>
-            <img src="icons/tooltip.png" alt="tooltip" id="tooltip" title="Please manually enter your LinkedIn profile information or load it automatically by navigating to your LinkedIn profile webpage, and then clicking the 'Load Profile' button. This information helps us understand relevant context around you, allowing us to create custom tailored messages from your perspective.">
-            <!-- </div> -->
-        </div>
-        <div id = "profile-details-input" class="input-wrapper">
-                <input type="text" id="userProfile" placeholder="Enter your profile details" required>
-                <p class="or">OR</p>
-                <button id="loadUserProfile" type="button">Load profile</button>      
-        </div>
-    </div>
-    
+  </div>
 
-    <div class="input-group">
-        <div id = "system-prompt-heading" class="input-wrapper">
-            <h2>System Prompt</h2>
-
-            <img src="icons/tooltip.png" alt="tooltip" id="tooltip" title="It is recommended to use the default system prompt for best outputs. You can use a custom system prompt for advanced behaviour customisation."> 
-        </div>
-
-        <div cid = "system-prompt-input" class="input-wrapper">
-          <input type="text" id="systemPrompt" placeholder="Enter system prompt" required>
-          <button id="default-system-prompt-button" type="button">Restore default</button>
-        
-        </div>
-    </div>
-
-    <div class="input-group">
-        <div id="saved-task-heading" class="input-wrapper">
-            <h2>Saved Tasks</h2>
-            <img src="icons/tooltip.png" alt="tooltip" id="tooltip" title="Add and manage your tasks here. Each task includes a name and a detailed description. During the generation process, the description of the selected task will be used as the input for message creation, combined with the system prompt to generate LinkedIn messages."> 
-        </div>
-        
-        <div id="task-list-heading" class="input-wrapper">
-            <p id="Task Name">Task Name</p>
-            <p id="Task Description">Task Description</p>
-            <button id="removeAllTasksButton" type="button">Remove all</button>
-        </div>
-
-        <div id="task-list">
-            <!-- <div class="input-wrapper">
-                // dynamic content
-            </div>   -->
-        </div>
-
-        <div id="new-task" class="input-wrapper">
-            <input type="text" id="newTaskKey" placeholder="Enter task name">
-            <input type="text" id="newTaskValue" placeholder="Enter task description">
-            <button id="addTaskButton" type="button">Add Task</button>
-        </div>
-
-    </div>
-
-    <div class="button-group">
-        <button id="backButton" type="button">Back</button>
-      <button id="saveSettingsButton" type="button">Save</button>
-    </div>
-  
   <script type="module" src="dist/settings.bundle.js"></script>
-  <!-- <script type="module" src="src/settings.js"></script> -->
-
-  <!-- <script src="settings.js"></script> -->
 </body>
 </html>
