@@ -8,8 +8,46 @@
   --accent: #4f46e5;
   --accent-soft: #eef2ff;
   --success: #16a34a;
+  --input-bg: #ffffff;
+  --surface-subtle: #f9fafb;
   --shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
   --radius: 16px;
+}
+
+body.theme-light {
+  color-scheme: light;
+}
+
+body.theme-dark {
+  color-scheme: dark;
+  --bg: #0f172a;
+  --panel: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #334155;
+  --accent: #818cf8;
+  --accent-soft: #2e3a8a;
+  --success: #22c55e;
+  --input-bg: #1f2937;
+  --surface-subtle: #1f2937;
+  --shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  body.theme-system {
+    color-scheme: dark;
+    --bg: #0f172a;
+    --panel: #111827;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #334155;
+    --accent: #818cf8;
+    --accent-soft: #2e3a8a;
+    --success: #22c55e;
+    --input-bg: #1f2937;
+    --surface-subtle: #1f2937;
+    --shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  }
 }
 
 * {
@@ -125,7 +163,7 @@ textarea {
   border: 1px solid var(--border);
   padding: 10px 12px;
   font-size: 12px;
-  background: #fff;
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -218,7 +256,7 @@ button:hover:not(:disabled) {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px;
-  background: #f9fafb;
+  background: var(--surface-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;

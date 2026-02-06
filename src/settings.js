@@ -2,6 +2,8 @@ import OpenAI from "openai";
 
 let tasks = [];
 let userApiKey = "";
+const THEME_STORAGE_KEY = "themePreference";
+const THEME_OPTIONS = new Set(["system", "light", "dark"]);
 
 const defaultSystemPrompt = `
 YOUR TASK is to assist users in crafting short LinkedIn messages to people based on their LinkedIn profiles. (Context: "The user will provide the LinkedIn profiles as parsed innertext from the HTML of the LinkedIn profile webpage. The user will also provide a user profile text to give more insight into the user's professional profile and background, helping to personalize the messages from the user's point of view. Additionally, the user will provide a specific task detailing the purpose of the LinkedIn message they want to create.") 
@@ -37,6 +39,7 @@ YOUR TASK is to assist users in crafting short LinkedIn messages to people based
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(getSavedTheme());
   loadSavedSettings();
   bindEvents();
 });
@@ -58,6 +61,11 @@ function loadSavedSettings() {
 
   if (savedSystemPrompt) {
     document.getElementById("systemPrompt").value = savedSystemPrompt;
+  }
+
+  const themeSelect = document.getElementById("themeSelect");
+  if (themeSelect) {
+    themeSelect.value = getSavedTheme();
   }
 
   tasks = savedTasks;
@@ -129,6 +137,12 @@ function bindEvents() {
   document.getElementById("default-system-prompt-button").addEventListener("click", () => {
     document.getElementById("systemPrompt").value = defaultSystemPrompt;
   });
+
+  document.getElementById("themeSelect").addEventListener("change", (event) => {
+    const theme = THEME_OPTIONS.has(event.target.value) ? event.target.value : "system";
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    applyTheme(theme);
+  });
 }
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -198,4 +212,15 @@ function renderTasks() {
     row.appendChild(removeButton);
     taskList.appendChild(row);
   });
+}
+
+function getSavedTheme() {
+  const theme = localStorage.getItem(THEME_STORAGE_KEY);
+  return THEME_OPTIONS.has(theme) ? theme : "system";
+}
+
+function applyTheme(theme) {
+  const normalizedTheme = THEME_OPTIONS.has(theme) ? theme : "system";
+  document.body.classList.remove("theme-system", "theme-light", "theme-dark");
+  document.body.classList.add(`theme-${normalizedTheme}`);
 }

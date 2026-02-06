@@ -8,6 +8,8 @@ const DEFAULTS = {
   includeCta: true,
   includeCompliment: false
 };
+const THEME_STORAGE_KEY = "themePreference";
+const THEME_OPTIONS = new Set(["system", "light", "dark"]);
 
 const LENGTH_GUIDANCE = {
   Short: "1-3 concise sentences",
@@ -16,6 +18,7 @@ const LENGTH_GUIDANCE = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(getSavedTheme());
   loadTasks();
   hydratePreferences();
   renderHistory();
@@ -306,4 +309,15 @@ function renderHistory() {
     wrapper.appendChild(actions);
     container.appendChild(wrapper);
   });
+}
+
+function getSavedTheme() {
+  const theme = localStorage.getItem(THEME_STORAGE_KEY);
+  return THEME_OPTIONS.has(theme) ? theme : "system";
+}
+
+function applyTheme(theme) {
+  const normalizedTheme = THEME_OPTIONS.has(theme) ? theme : "system";
+  document.body.classList.remove("theme-system", "theme-light", "theme-dark");
+  document.body.classList.add(`theme-${normalizedTheme}`);
 }

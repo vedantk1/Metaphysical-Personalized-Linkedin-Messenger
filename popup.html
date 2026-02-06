@@ -92,6 +92,14 @@
       <div id="historyList" class="history-list"></div>
     </section>
   </div>
+  <script>
+    (() => {
+      const theme = localStorage.getItem("themePreference");
+      const normalizedTheme = ["system", "light", "dark"].includes(theme) ? theme : "system";
+      document.body.classList.remove("theme-system", "theme-light", "theme-dark");
+      document.body.classList.add(`theme-${normalizedTheme}`);
+    })();
+  </script>
   <script type="module" src="dist/popup.bundle.js"></script>
 </body>
 </html>

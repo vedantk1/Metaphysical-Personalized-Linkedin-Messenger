@@ -18,6 +18,19 @@
     </header>
 
     <section class="panel">
+      <h2>Appearance</h2>
+      <p class="helper-text">Choose how the extension should look.</p>
+      <label class="field">
+        <span>Theme</span>
+        <select id="themeSelect">
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="panel">
       <h2>OpenAI API key</h2>
       <p class="helper-text">Your key stays in local storage and is never shared outside the extension.</p>
       <div class="field horizontal">
@@ -67,6 +80,32 @@
     </div>
   </div>
 
+  <script>
+    (() => {
+      const THEME_KEY = "themePreference";
+      const THEMES = new Set(["system", "light", "dark"]);
+
+      const normalizeTheme = (value) => (THEMES.has(value) ? value : "system");
+      const applyTheme = (theme) => {
+        const normalizedTheme = normalizeTheme(theme);
+        document.body.classList.remove("theme-system", "theme-light", "theme-dark");
+        document.body.classList.add(`theme-${normalizedTheme}`);
+      };
+
+      const savedTheme = normalizeTheme(localStorage.getItem(THEME_KEY));
+      applyTheme(savedTheme);
+
+      const themeSelect = document.getElementById("themeSelect");
+      if (themeSelect) {
+        themeSelect.value = savedTheme;
+        themeSelect.addEventListener("change", (event) => {
+          const nextTheme = normalizeTheme(event.target.value);
+          localStorage.setItem(THEME_KEY, nextTheme);
+          applyTheme(nextTheme);
+        });
+      }
+    })();
+  </script>
   <script type="module" src="dist/settings.bundle.js"></script>
 </body>
 </html>
