@@ -1,4 +1,3 @@
-
 import OpenAI from "openai";
 
 const DEFAULTS = {
@@ -8,9 +7,10 @@ const DEFAULTS = {
   includeCta: true,
   includeCompliment: false
 };
-const THEME_STORAGE_KEY = "themePreference";
+
 const THEME_OPTIONS = new Set(["system", "light", "dark"]);
 const MODEL_OPTIONS = new Set(["gpt-5", "gpt-5-mini", "gpt-5-nano"]);
+const LINKEDIN_PROFILE_URL = /^https?:\/\/([a-z]{2,3}\.)?linkedin\.com\/in\//i;
 
 const LENGTH_GUIDANCE = {
   Short: "1-3 concise sentences",
@@ -24,7 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
   hydratePreferences();
   renderHistory();
   bindEvents();
-  setStatus("Ready to generate.");
+
+  const mainButton = document.getElementById("mainButton");
+  mainButton.dataset.defaultLabel = mainButton.textContent;
+
+  setStatus("Ready to generate.", "info");
 });
 
 function bindEvents() {
@@ -61,34 +65,36 @@ function bindEvents() {
   document.getElementById("copyButton").addEventListener("click", async () => {
     const output = document.getElementById("output").value.trim();
     if (!output) {
-      setStatus("Nothing to copy yet.");
+      setStatus("Nothing to copy yet.", "error");
       return;
     }
+
     await navigator.clipboard.writeText(output);
-    setStatus("Message copied to clipboard.");
+    setStatus("Message copied to clipboard.", "success");
   });
 
   document.getElementById("clearButton").addEventListener("click", () => {
     document.getElementById("output").value = "";
     document.getElementById("additionalContext").value = "";
-    setStatus("Cleared output and notes.");
+    setStatus("Cleared output and notes.", "info");
   });
 
   document.getElementById("saveButton").addEventListener("click", () => {
     const output = document.getElementById("output").value.trim();
     if (!output) {
-      setStatus("Generate a message before saving.");
+      setStatus("Generate a message before saving.", "error");
       return;
     }
+
     saveToHistory(output);
     renderHistory();
-    setStatus("Saved to history.");
+    setStatus("Saved to history.", "success");
   });
 
   document.getElementById("clearHistoryButton").addEventListener("click", () => {
     localStorage.setItem("messageHistory", JSON.stringify([]));
     renderHistory();
-    setStatus("History cleared.");
+    setStatus("History cleared.", "info");
   });
 
   document.getElementById("historyList").addEventListener("click", async (event) => {
@@ -96,20 +102,23 @@ function bindEvents() {
     if (!button) {
       return;
     }
+
     const index = Number(button.dataset.historyIndex);
     const history = getHistory();
     if (!history[index]) {
       return;
     }
+
     await navigator.clipboard.writeText(history[index].message);
-    setStatus("History message copied.");
+    setStatus("History message copied.", "success");
   });
 }
 
 function loadTasks() {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
   const taskDropdown = document.getElementById("taskDropdown");
   taskDropdown.innerHTML = "";
+
   const placeholder = document.createElement("option");
   placeholder.value = "default";
   placeholder.text = "Select task";
@@ -134,6 +143,7 @@ function hydratePreferences() {
   localStorage.setItem("model", model);
   localStorage.setItem("tone", tone);
   localStorage.setItem("length", length);
+
   if (includeCta === null) {
     localStorage.setItem("includeCta", String(DEFAULTS.includeCta));
   }
@@ -149,59 +159,107 @@ function hydratePreferences() {
     localStorage.getItem("includeCompliment") === "true";
 }
 
-function setStatus(message) {
+function setStatus(message, type = "info") {
   const status = document.getElementById("statusMessage");
   status.textContent = message;
+  status.classList.remove("info", "success", "error");
+  status.classList.add(type);
 }
 
-function setLoading(isLoading) {
-  document.getElementById("mainButton").disabled = isLoading;
-  document.getElementById("copyButton").disabled = isLoading;
-  document.getElementById("saveButton").disabled = isLoading;
-  document.getElementById("clearButton").disabled = isLoading;
+function setLoading(isLoading, buttonText = "Generating...") {
+  const mainButton = document.getElementById("mainButton");
+  const copyButton = document.getElementById("copyButton");
+  const saveButton = document.getElementById("saveButton");
+  const clearButton = document.getElementById("clearButton");
+
+  mainButton.disabled = isLoading;
+  copyButton.disabled = isLoading;
+  saveButton.disabled = isLoading;
+  clearButton.disabled = isLoading;
+
+  mainButton.classList.toggle("busy-button", isLoading);
+  mainButton.textContent = isLoading ? buttonText : mainButton.dataset.defaultLabel;
 }
 
-function startGeneration() {
-  const apiKey = localStorage.getItem("apiKey");
-  const profile = localStorage.getItem("userProfile");
-  const systemPrompt = localStorage.getItem("systemPrompt");
-  const userTask = document.getElementById("taskDropdown").value;
-
-  if (!apiKey || !profile || !systemPrompt || userTask === "default") {
-    setStatus("Missing settings. Add your API key, profile, prompt, and task in Settings.");
-    alert("Please enter your API key, profile, system prompt, and task in Settings.");
+async function startGeneration() {
+  const validationMessage = getGenerationValidationMessage();
+  if (validationMessage) {
+    setStatus(validationMessage, "error");
     return;
   }
 
-  setStatus("Reading LinkedIn profile from the active tab...");
-  setLoading(true);
+  setLoading(true, "Loading profile...");
+  setStatus("Reading LinkedIn profile from the active tab...", "info");
 
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    chrome.scripting.executeScript({
-      target: { tabId: activeTab.id },
-      func: () => {
-        const profileText = document.body ? document.body.innerText : "";
-        chrome.runtime.sendMessage({ action: "createResponse", profileContent: profileText });
-      }
-    });
-  });
+  try {
+    const activeTab = await getActiveTab();
+    if (!activeTab || !activeTab.id) {
+      throw new Error("No active tab found.");
+    }
+
+    if (!isLinkedInProfileUrl(activeTab.url)) {
+      setStatus("Open a LinkedIn profile URL (linkedin.com/in/...) in the active tab.", "error");
+      return;
+    }
+
+    const profileText = await extractTextFromTab(activeTab.id);
+    if (!profileText) {
+      setStatus("Could not read text from the active LinkedIn profile. Scroll and try again.", "error");
+      return;
+    }
+
+    setLoading(true, "Generating...");
+    await createResponse(profileText);
+  } catch (error) {
+    console.error("Generation failed:", error);
+    setStatus(`Unable to generate message: ${error.message}`, "error");
+  } finally {
+    setLoading(false);
+  }
 }
 
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.action === "createResponse") {
-    createResponse(message.profileContent);
+function getGenerationValidationMessage() {
+  const apiKey = localStorage.getItem("apiKey") || "";
+  const profile = localStorage.getItem("userProfile") || "";
+  const systemPrompt = localStorage.getItem("systemPrompt") || "";
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  const selectedTask = document.getElementById("taskDropdown").value;
+
+  if (!apiKey.trim()) {
+    return "Missing API key. Add it in Settings.";
   }
-});
+
+  if (!profile.trim()) {
+    return "Missing your LinkedIn profile context. Load or paste it in Settings.";
+  }
+
+  if (!systemPrompt.trim()) {
+    return "Missing system prompt. Restore or edit it in Settings.";
+  }
+
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return "No tasks found. Add at least one task in Settings.";
+  }
+
+  if (selectedTask === "default") {
+    return "Select a task before generating.";
+  }
+
+  return "";
+}
 
 async function createResponse(profileContent) {
   const apiKey = localStorage.getItem("apiKey");
   const userProfile = localStorage.getItem("userProfile");
   const systemPrompt = localStorage.getItem("systemPrompt");
   const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
   const taskKey = document.getElementById("taskDropdown").value;
   const selectedTask = tasks.find((task) => task.key === taskKey);
-  const userTask = selectedTask ? selectedTask.value : taskKey;
+
+  if (!selectedTask) {
+    throw new Error("Selected task no longer exists. Re-open Settings and add/select a task.");
+  }
 
   const tone = document.getElementById("toneDropdown").value;
   const length = document.getElementById("lengthDropdown").value;
@@ -215,7 +273,7 @@ async function createResponse(profileContent) {
   });
 
   const userMessage = `
-Task: ${userTask}
+Task: ${selectedTask.value}
 Tone: ${tone}
 Length: ${length} (${LENGTH_GUIDANCE[length]})
 Include CTA: ${includeCta ? "Yes" : "No"}
@@ -230,32 +288,29 @@ ${profileContent}
 
 Write the message only. Avoid placeholders.`;
 
-  setStatus("Generating message...");
+  setStatus("Generating message...", "info");
 
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ],
-      model: localStorage.getItem("model")
-    });
+  const completion = await openai.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: systemPrompt
+      },
+      {
+        role: "user",
+        content: userMessage
+      }
+    ],
+    model: localStorage.getItem("model") || DEFAULTS.model
+  });
 
-    const message = completion.choices[0]?.message?.content || "";
-    document.getElementById("output").value = message;
-    setStatus("Message generated. Review or save to history.");
-  } catch (error) {
-    console.error("OpenAI error:", error);
-    setStatus("Something went wrong generating the message. Check your key and try again.");
-  } finally {
-    setLoading(false);
+  const message = completion.choices[0]?.message?.content?.trim() || "";
+  if (!message) {
+    throw new Error("Model returned an empty message.");
   }
+
+  document.getElementById("output").value = message;
+  setStatus("Message generated. Review or save to history.", "success");
 }
 
 function saveToHistory(message) {
@@ -268,6 +323,7 @@ function saveToHistory(message) {
     model: document.getElementById("modelDropdown").value,
     createdAt: new Date().toISOString()
   };
+
   history.unshift(entry);
   localStorage.setItem("messageHistory", JSON.stringify(history.slice(0, 5)));
 }
@@ -307,7 +363,6 @@ function renderHistory() {
     copyButton.dataset.historyIndex = String(index);
 
     actions.appendChild(copyButton);
-
     wrapper.appendChild(meta);
     wrapper.appendChild(message);
     wrapper.appendChild(actions);
@@ -316,7 +371,7 @@ function renderHistory() {
 }
 
 function getSavedTheme() {
-  const theme = localStorage.getItem(THEME_STORAGE_KEY);
+  const theme = localStorage.getItem("themePreference");
   return THEME_OPTIONS.has(theme) ? theme : "system";
 }
 
@@ -324,4 +379,40 @@ function applyTheme(theme) {
   const normalizedTheme = THEME_OPTIONS.has(theme) ? theme : "system";
   document.body.classList.remove("theme-system", "theme-light", "theme-dark");
   document.body.classList.add(`theme-${normalizedTheme}`);
+}
+
+function isLinkedInProfileUrl(url) {
+  return typeof url === "string" && LINKEDIN_PROFILE_URL.test(url);
+}
+
+function getActiveTab() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      resolve(tabs[0]);
+    });
+  });
+}
+
+function extractTextFromTab(tabId) {
+  return new Promise((resolve, reject) => {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId },
+        func: () => (document.body ? document.body.innerText : "")
+      },
+      (results) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        const text = results?.[0]?.result;
+        resolve(typeof text === "string" ? text.trim() : "");
+      }
+    );
+  });
 }

@@ -249,8 +249,23 @@ button:hover:not(:disabled) {
 
 .status {
   font-size: 12px;
-  color: var(--muted);
   margin: 0;
+}
+
+.status.info {
+  color: var(--muted);
+}
+
+.status.success {
+  color: var(--success);
+}
+
+.status.error {
+  color: #ef4444;
+}
+
+.busy-button {
+  opacity: 0.8;
 }
 
 .history-list {

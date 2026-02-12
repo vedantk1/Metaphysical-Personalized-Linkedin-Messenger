@@ -16,6 +16,7 @@
       </div>
       <button id="backButton" class="ghost-button" type="button">Back</button>
     </header>
+    <p id="settingsStatus" class="status info" aria-live="polite">Changes are saved automatically.</p>
 
     <section class="panel">
       <h2>Appearance</h2>
@@ -32,7 +33,7 @@
 
     <section class="panel">
       <h2>OpenAI API key</h2>
-      <p class="helper-text">Your key stays in local storage and is never shared outside the extension.</p>
+      <p class="helper-text">Your key is stored in local storage and used for requests sent to OpenAI from this extension.</p>
       <div class="field horizontal">
         <input type="password" id="openAiApiInput" placeholder="sk-..." required>
         <button id="toggleApiVisibility" class="ghost-button" type="button">Show</button>
@@ -75,12 +76,8 @@
       <button id="addTaskButton" class="secondary" type="button">Add task</button>
     </section>
 
-    <div class="button-row settings-save-row" hidden>
-      <button id="saveSettingsButton" class="primary" type="button">Save settings</button>
-    </div>
   </div>
 
-  <script src="ui-overrides.js"></script>
   <script type="module" src="dist/settings.bundle.js"></script>
 </body>
 </html>
